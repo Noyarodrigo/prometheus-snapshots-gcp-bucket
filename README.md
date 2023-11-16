@@ -3,6 +3,7 @@ This is a cronjob for taking snapshots of prometheus metrics and upload them to 
 
 ### The bucket
 Must be created using terraform, you will find the files in the "terraform" directory
+
 To use this recipe you must:
 * login in the terminal with your GCP account or modify the terraform files for using your credentials
 * update the variables like <project_ID>, you'll find them in the variables.tf files and the main.tf file
@@ -11,9 +12,10 @@ You can change the retention policy here, by default is 7 days. You'll need to e
 
 ### Prometheus
 Pre-requisites: The prometheus Admin API must be enabled (true state)
+
 To install the necessary objects you can use the .sh script, you'll see that you must specify your repo credential
-to pull the needed images:
-* Kubectl image capable of using curl -> you can use the dockerfile inside kubectl-docker-image  
+To pull the needed images:
+* Kubectl image capable of using curl -> you can use the dockerfile inside kubectl-docker-image and push it to your own repo
 * python copy image -> this is where the compression and upload are done, you must build and push using the respective dockerfile in the script folder
 
 Remember to edit the secret with your pulling credentials
