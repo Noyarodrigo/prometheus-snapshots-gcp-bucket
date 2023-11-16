@@ -4,6 +4,8 @@ This is a cronjob for taking snapshots of prometheus metrics and upload them to 
 ### The bucket
 Must be created using terraform, you will find the files in the "terraform" directory
 
+It has been designed to use it as a module in a main file, so you could add it to your main project
+
 To use this recipe you must:
 * login in the terminal with your GCP account or modify the terraform files for using your credentials
 * update the variables like <project_ID>, you'll find them in the variables.tf files and the main.tf file
