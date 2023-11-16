@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-snapshot-configmap
+  namespace: monitoring
+data:
+  BUCKET_NAME: prometheus-bucket
+  FILE_NAME: prometheus-metrics-backup.tar.gz
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prometheus-snapshot-secret
+  namespace: monitoring
+type: Opaque
+data:
+  credentials.json: 
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prometheus-snapshot
+  namespace: monitoring
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: prometheus
+          initContainers:
+          - name: copy-container
+            image: <your_repo>/kubectl-snapshot:1.0.0
+            command:
+              - "/bin/sh"
+              - "-c"
+              - |
+                curl -XPOST http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/admin/tsdb/snapshot && \
+                kubectl cp monitoring/prometheus-prometheus-kube-prometheus-prometheus-0:/prometheus/snapshots/ /shared-folder
+            volumeMounts:
+            - name: shared-data
+              mountPath: /shared-folder
+          containers:
+          - name: python-container
+            image: <your_repo>/prometheus-cron-snapshot:x.x.x
+            command: ["python3", "/app/prometheus-snapshot.py"]
+            env:
+            - name: BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: prometheus-snapshot-configmap
+                  key: BUCKET_NAME
+            - name: FILE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: prometheus-snapshot-configmap
+                  key: FILE_NAME
+            volumeMounts:
+            - name: shared-data
+              mountPath: /shared-folder
+            - name: secret-volume
+              mountPath: /app/credentials
+          restartPolicy: OnFailure
+          volumes:
+          - name: shared-data
+            emptyDir: {}
+          - name: secret-volume
+            secret:
+              secretName: prometheus-snapshot-secret
