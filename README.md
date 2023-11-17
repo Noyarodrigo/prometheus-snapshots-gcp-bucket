@@ -12,8 +12,19 @@ To use this recipe you must:
 
 You can change the retention policy here, by default is 7 days. You'll need to edit the line "age: 7" in the main.tf file 
 
+After the rosources have been created you have to:
+* create a gcp service account with permissions to use buckets (sotrage and objects)
+* create a key for that account and use a command like the following to use it as a secret in k8s
+
+cat <your_key>.json | base64 | tr -d '\n' 
+
+* You must add this encoded credential in the cronjob yaml, in the "secret" part, after "credentials.json:"
+
+*This credential is going to be mounted as a file and picked up by the python script*
+
 ### Prometheus
-Pre-requisites: The prometheus Admin API must be enabled (true state)
+Pre-requisites:
+* The prometheus Admin API must be enabled (true state)
 
 To install the necessary objects you can use the .sh script, you'll see that you must specify your repo credential
 To pull the needed images:
